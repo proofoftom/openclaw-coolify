@@ -1,7 +1,84 @@
 services:
+  openclaw-init:
+    image: localhost:5000/openclaw-discord:latest
+    volumes:
+      - openclaw-data:/home/node/.openclaw
+    environment:
+      - AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY=${API_KEY}
+    command: >
+      sh -c '
+      mkdir -p /home/node/.openclaw/agents/main/agent &&
+      if [ ! -f /home/node/.openclaw/agents/main/agent/auth-profiles.json ] && [ -n "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY" ]; then
+        cat > /home/node/.openclaw/agents/main/agent/auth-profiles.json << "EOF"
+      {
+        "version": 1,
+        "profiles": {
+          "zai:default": {
+            "type": "api_key",
+            "provider": "zai",
+            "key": "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY"
+          }
+        },
+        "lastGood": {
+          "zai": "zai:default"
+        },
+        "usageStats": {
+          "zai:default": {
+            "lastUsed": 0,
+            "errorCount": 0,
+            "lastFailureAt": 0
+          }
+        }
+      }
+      EOF
+      fi &&
+      if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+        cat > /home/node/.openclaw/openclaw.json << "EOF"
+      {
+        "messages": {
+          "ackReactionScope": "group-mentions"
+        },
+        "agents": {
+          "defaults": {
+            "maxConcurrent": 4,
+            "subagents": {
+              "maxConcurrent": 8
+            },
+            "compaction": {
+              "mode": "safeguard"
+            },
+            "workspace": "/home/node/.openclaw/workspace",
+            "models": {
+              "zai/glm-4.7": {
+                "alias": "GLM"
+              }
+            },
+            "model": {
+              "primary": "zai/glm-4.7"
+            }
+          }
+        },
+        "plugins": {
+          "entries": {
+            "discord": {
+              "enabled": true
+            }
+          }
+        },
+        "meta": {
+          "lastTouchedVersion": "2026.2.2-3"
+        }
+      }
+      EOF
+      fi
+      '
+
   openclaw-gateway:
     image: localhost:5000/openclaw-discord:latest
     restart: unless-stopped
+    depends_on:
+      openclaw-init:
+        condition: service_completed_successfully
 
     environment:
       # Core settings
@@ -40,18 +117,7 @@ services:
       retries: 3
       start_period: 40s
 
-    command: >
-      sh -c '
-      mkdir -p /home/node/.openclaw/agents/main/agent &&
-      if [ ! -f /home/node/.openclaw/agents/main/agent/auth-profiles.json ] && [ -n "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY" ]; then
-        echo "{\"version\":1,\"profiles\":{\"zai:default\":{\"type\":\"api_key\",\"provider\":\"zai\",\"key\":\"$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY\"}},\"lastGood\":{\"zai\":\"zai:default\"},\"usageStats\":{\"zai:default\":{\"lastUsed\":0,\"errorCount\":0,\"lastFailureAt\":0}}}" > /home/node/.openclaw/agents/main/agent/auth-profiles.json;
-      fi &&
-      if [ ! -f /home/node/.openclaw/openclaw.json ]; then
-        MODEL="$${AGENTS_DEFAULTS_MODEL_PRIMARY:-zai/glm-4.7}" &&
-        echo "{\"messages\":{\"ackReactionScope\":\"group-mentions\"},\"agents\":{\"defaults\":{\"maxConcurrent\":4,\"subagents\":{\"maxConcurrent\":8},\"compaction\":{\"mode\":\"safeguard\"},\"workspace\":\"/home/node/.openclaw/workspace\",\"models\":{\"$$MODEL\":{\"alias\":\"GLM\"}},\"model\":{\"primary\":\"$$MODEL\"}}},\"plugins\":{\"entries\":{\"discord\":{\"enabled\":true}}},\"meta\":{\"lastTouchedVersion\":\"2026.2.2-3\"}}" > /home/node/.openclaw/openclaw.json;
-      fi &&
-      exec openclaw gateway --bind lan --port 18789 --allow-unconfigured
-      '
+    command: ["openclaw", "gateway", "--bind", "lan", "--port", "18789", "--allow-unconfigured"]
 
     logging:
       driver: "json-file"
