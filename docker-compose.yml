@@ -61,6 +61,11 @@ services:
               }
             }
           },
+          "channels": {
+            "discord": {
+              "groupPolicy": "allowlist"
+            }
+          },
           "plugins": {
             "entries": {
               "discord": {
