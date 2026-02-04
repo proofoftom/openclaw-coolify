@@ -12,7 +12,7 @@ services:
       - |
         mkdir -p /home/node/.openclaw/agents/main/agent
         if [ ! -f /home/node/.openclaw/agents/main/agent/auth-profiles.json ] && [ -n "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY" ]; then
-          cat > /home/node/.openclaw/agents/main/agent/auth-profiles.json << 'EOF'
+          cat > /home/node/.openclaw/agents/main/agent/auth-profiles.json << EOF
         {
           "version": 1,
           "profiles": {
@@ -36,7 +36,7 @@ services:
         EOF
         fi
         if [ ! -f /home/node/.openclaw/openclaw.json ]; then
-          cat > /home/node/.openclaw/openclaw.json << 'EOF'
+          cat > /home/node/.openclaw/openclaw.json << EOF
         {
           "messages": {
             "ackReactionScope": "group-mentions"
