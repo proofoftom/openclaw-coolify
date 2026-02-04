@@ -29,6 +29,7 @@ services:
 
     volumes:
       - openclaw-data:/home/node/.openclaw
+      - ./init-auth.sh:/usr/local/bin/init-auth.sh:ro
 
     labels:
       - com.openclaw.instance=${INSTANCE_NAME:-proofofclaw-coder}
@@ -40,6 +41,7 @@ services:
       retries: 3
       start_period: 40s
 
+    entrypoint: ["/usr/local/bin/init-auth.sh"]
     command: ["openclaw", "gateway", "--bind", "lan", "--port", "18789", "--allow-unconfigured"]
 
     logging:
