@@ -63,7 +63,7 @@ services:
           },
           "channels": {
             "discord": {
-              "groupPolicy": "allowlist"
+              "groupPolicy": "open"
             }
           },
           "plugins": {
