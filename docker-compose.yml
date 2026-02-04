@@ -46,6 +46,9 @@ services:
       if [ ! -f /home/node/.openclaw/agents/main/agent/auth-profiles.json ] && [ -n "$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY" ]; then
         echo "{\"version\":1,\"profiles\":{\"zai:default\":{\"type\":\"api_key\",\"provider\":\"zai\",\"key\":\"$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY\"}},\"lastGood\":{\"zai\":\"zai:default\"},\"usageStats\":{\"zai:default\":{\"lastUsed\":0,\"errorCount\":0,\"lastFailureAt\":0}}}" > /home/node/.openclaw/agents/main/agent/auth-profiles.json;
       fi &&
+      if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+        echo "{\"messages\":{\"ackReactionScope\":\"group-mentions\"},\"agents\":{\"defaults\":{\"maxConcurrent\":4,\"subagents\":{\"maxConcurrent\":8},\"compaction\":{\"mode\":\"safeguard\"},\"workspace\":\"/home/node/.openclaw/workspace\",\"models\":{\"$AGENTS_DEFAULTS_MODEL_PRIMARY\":{\"alias\":\"GLM\"}},\"model\":{\"primary\":\"$AGENTS_DEFAULTS_MODEL_PRIMARY\"}}},\"plugins\":{\"entries\":{\"discord\":{\"enabled\":true}}},\"meta\":{\"lastTouchedVersion\":\"2026.2.2-3\"}}" > /home/node/.openclaw/openclaw.json;
+      fi &&
       exec openclaw gateway --bind lan --port 18789 --allow-unconfigured
       '
 
