@@ -1,0 +1,53 @@
+services:
+  openclaw-gateway:
+    image: registry-q84sw4448cswock0sk4c80s8:5000/openclaw-discord:latest
+    restart: unless-stopped
+    user: "1000:1000"
+
+    environment:
+      # Core settings
+      - NODE_ENV=production
+      - HOME=/home/node
+      - INSTANCE_NAME=${INSTANCE_NAME:-proofofclaw-coder}
+
+      # Gateway configuration
+      - OPENCLAW_GATEWAY_BIND=lan
+      - OPENCLAW_GATEWAY_PORT=18789
+      - OPENCLAW_GATEWAY_TOKEN=${GATEWAY_TOKEN}
+
+      # Discord configuration
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - CHANNELS_DISCORD_TOKEN=${DISCORD_BOT_TOKEN}
+      - CHANNELS_DISCORD_ENABLED=true
+      - CHANNELS_DISCORD_GROUPPOLICY=allowlist
+      - CHANNELS_DISCORD_GUILDS=${DISCORD_GUILDS}
+
+      # Model configuration
+      - AGENTS_DEFAULTS_MODEL_PRIMARY=${MODEL:-zai/glm-4.7}
+      - AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY=${API_KEY}
+      - AGENTS_DEFAULTS_WORKSPACE=/home/node/.openclaw/workspace
+      - XDG_CONFIG_HOME=/home/node/.openclaw
+
+    volumes:
+      - openclaw-data:/home/node/.openclaw
+
+    labels:
+      - com.openclaw.instance=${INSTANCE_NAME:-proofofclaw-coder}
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:18789/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    command: ["openclaw", "gateway", "--bind", "lan", "--port", "18789", "--allow-unconfigured"]
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  openclaw-data:
