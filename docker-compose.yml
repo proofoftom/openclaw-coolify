@@ -29,7 +29,6 @@ services:
 
     volumes:
       - openclaw-data:/home/node/.openclaw
-      - ./init-auth.sh:/usr/local/bin/init-auth.sh:ro
 
     labels:
       - com.openclaw.instance=${INSTANCE_NAME:-proofofclaw-coder}
@@ -41,8 +40,35 @@ services:
       retries: 3
       start_period: 40s
 
-    entrypoint: ["/usr/local/bin/init-auth.sh"]
-    command: ["openclaw", "gateway", "--bind", "lan", "--port", "18789", "--allow-unconfigured"]
+    command: >
+      sh -c '
+      mkdir -p /home/node/.openclaw/agents/main/agent &&
+      if [ ! -f /home/node/.openclaw/agents/main/agent/auth-profiles.json ] && [ -n "$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY" ]; then
+        cat > /home/node/.openclaw/agents/main/agent/auth-profiles.json << "EOF"
+      {
+        "version": 1,
+        "profiles": {
+          "zai:default": {
+            "type": "api_key",
+            "provider": "zai",
+            "key": "${AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY}"
+          }
+        },
+        "lastGood": {
+          "zai": "zai:default"
+        },
+        "usageStats": {
+          "zai:default": {
+            "lastUsed": 0,
+            "errorCount": 0,
+            "lastFailureAt": 0
+          }
+        }
+      }
+      EOF
+      fi &&
+      exec openclaw gateway --bind lan --port 18789 --allow-unconfigured
+      '
 
     logging:
       driver: "json-file"
