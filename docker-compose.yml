@@ -5,73 +5,74 @@ services:
       - openclaw-data:/home/node/.openclaw
     environment:
       - AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY=${API_KEY}
-    command: >
-      sh -c '
-      mkdir -p /home/node/.openclaw/agents/main/agent &&
-      if [ ! -f /home/node/.openclaw/agents/main/agent/auth-profiles.json ] && [ -n "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY" ]; then
-        cat > /home/node/.openclaw/agents/main/agent/auth-profiles.json << "EOF"
-      {
-        "version": 1,
-        "profiles": {
-          "zai:default": {
-            "type": "api_key",
-            "provider": "zai",
-            "key": "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY"
-          }
-        },
-        "lastGood": {
-          "zai": "zai:default"
-        },
-        "usageStats": {
-          "zai:default": {
-            "lastUsed": 0,
-            "errorCount": 0,
-            "lastFailureAt": 0
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /home/node/.openclaw/agents/main/agent
+        if [ ! -f /home/node/.openclaw/agents/main/agent/auth-profiles.json ] && [ -n "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY" ]; then
+          cat > /home/node/.openclaw/agents/main/agent/auth-profiles.json << 'EOF'
+        {
+          "version": 1,
+          "profiles": {
+            "zai:default": {
+              "type": "api_key",
+              "provider": "zai",
+              "key": "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY"
+            }
+          },
+          "lastGood": {
+            "zai": "zai:default"
+          },
+          "usageStats": {
+            "zai:default": {
+              "lastUsed": 0,
+              "errorCount": 0,
+              "lastFailureAt": 0
+            }
           }
         }
-      }
-      EOF
-      fi &&
-      if [ ! -f /home/node/.openclaw/openclaw.json ]; then
-        cat > /home/node/.openclaw/openclaw.json << "EOF"
-      {
-        "messages": {
-          "ackReactionScope": "group-mentions"
-        },
-        "agents": {
-          "defaults": {
-            "maxConcurrent": 4,
-            "subagents": {
-              "maxConcurrent": 8
-            },
-            "compaction": {
-              "mode": "safeguard"
-            },
-            "workspace": "/home/node/.openclaw/workspace",
-            "models": {
-              "zai/glm-4.7": {
-                "alias": "GLM"
+        EOF
+        fi
+        if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+          cat > /home/node/.openclaw/openclaw.json << 'EOF'
+        {
+          "messages": {
+            "ackReactionScope": "group-mentions"
+          },
+          "agents": {
+            "defaults": {
+              "maxConcurrent": 4,
+              "subagents": {
+                "maxConcurrent": 8
+              },
+              "compaction": {
+                "mode": "safeguard"
+              },
+              "workspace": "/home/node/.openclaw/workspace",
+              "models": {
+                "zai/glm-4.7": {
+                  "alias": "GLM"
+                }
+              },
+              "model": {
+                "primary": "zai/glm-4.7"
               }
-            },
-            "model": {
-              "primary": "zai/glm-4.7"
             }
-          }
-        },
-        "plugins": {
-          "entries": {
-            "discord": {
-              "enabled": true
+          },
+          "plugins": {
+            "entries": {
+              "discord": {
+                "enabled": true
+              }
             }
+          },
+          "meta": {
+            "lastTouchedVersion": "2026.2.2-3"
           }
-        },
-        "meta": {
-          "lastTouchedVersion": "2026.2.2-3"
         }
-      }
-      EOF
-      fi
-      '
+        EOF
+        fi
 
   openclaw-gateway:
     image: localhost:5000/openclaw-discord:latest
