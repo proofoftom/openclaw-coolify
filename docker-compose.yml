@@ -1,8 +1,7 @@
 services:
   openclaw-gateway:
-    image: registry-q84sw4448cswock0sk4c80s8:5000/openclaw-discord:latest
+    image: localhost:5000/openclaw-discord:latest
     restart: unless-stopped
-    user: "1000:1000"
 
     environment:
       # Core settings
