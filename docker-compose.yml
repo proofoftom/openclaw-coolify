@@ -1,6 +1,7 @@
 services:
   openclaw-init:
     image: localhost:5000/openclaw-discord:latest
+    restart: "no"
     volumes:
       - openclaw-data:/home/node/.openclaw
     environment:
