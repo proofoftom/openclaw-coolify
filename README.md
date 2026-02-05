@@ -29,6 +29,26 @@ On first deployment, the init container creates:
   - Model: `zai/glm-4.7` (configurable via MODEL env var)
   - Discord group policy: `open` (responds in all servers)
 
+## Configuration Updates
+
+### Smart Merge Behavior (Default)
+By default, on redeploy:
+- **New keys** from the template are added to your config
+- **Existing settings** are preserved (user customizations win)
+- Your per-instance skills, preferences, and customizations are safe
+
+### Force Override Mode
+To enforce network-wide policies or reset an instance to template defaults:
+
+Set `OPENCLAW_FORCE_UPDATE=true` in Coolify environment variables and redeploy.
+
+**Warning:** This **replaces the entire config** - all user customizations will be lost!
+
+Use cases:
+- Enforcing security policies (e.g., `groupPolicy: allowlist`)
+- Resetting misconfigured instances
+- Rolling out breaking changes that require config replacement
+
 ## Important Notes
 
 ### Gateway Tokens

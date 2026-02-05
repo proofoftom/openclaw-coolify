@@ -6,11 +6,14 @@ services:
       - openclaw-data:/home/node/.openclaw
     environment:
       - AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY=${API_KEY}
+      - OPENCLAW_FORCE_UPDATE=${OPENCLAW_FORCE_UPDATE:-false}
     command:
       - sh
       - -c
       - |
         mkdir -p /home/node/.openclaw/agents/main/agent
+
+        # Create auth-profiles.json if it doesn't exist
         if [ ! -f /home/node/.openclaw/agents/main/agent/auth-profiles.json ] && [ -n "$$AGENTS_DEFAULTS_MODEL_PROVIDERS__ZAI__API_KEY" ]; then
           cat > /home/node/.openclaw/agents/main/agent/auth-profiles.json << EOF
         {
@@ -35,8 +38,9 @@ services:
         }
         EOF
         fi
-        if [ ! -f /home/node/.openclaw/openclaw.json ]; then
-          cat > /home/node/.openclaw/openclaw.json << EOF
+
+        # Create template for openclaw.json
+        cat > /tmp/openclaw-template.json << EOF
         {
           "messages": {
             "ackReactionScope": "group-mentions"
@@ -63,7 +67,8 @@ services:
           },
           "channels": {
             "discord": {
-              "groupPolicy": "open"
+              "groupPolicy": "open",
+              "allowBots": true
             }
           },
           "plugins": {
@@ -78,6 +83,25 @@ services:
           }
         }
         EOF
+
+        # Handle openclaw.json creation/update
+        if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+          # Fresh deployment - use template as-is
+          cp /tmp/openclaw-template.json /home/node/.openclaw/openclaw.json
+        elif [ "$$OPENCLAW_FORCE_UPDATE" = "true" ]; then
+          # Force update mode - replace entire config (destructive!)
+          cp /tmp/openclaw-template.json /home/node/.openclaw/openclaw.json
+          echo "⚠️  OPENCLAW_FORCE_UPDATE=true - replaced entire config, user customizations lost"
+        else
+          # Smart merge mode - preserve user customizations, add new template keys
+          # User values win on conflicts (right side of merge takes precedence)
+          if command -v jq >/dev/null 2>&1; then
+            jq -s '.[0] * .[1]' /tmp/openclaw-template.json /home/node/.openclaw/openclaw.json > /tmp/openclaw-merged.json && \
+              mv /tmp/openclaw-merged.json /home/node/.openclaw/openclaw.json
+            echo "✓ Merged template into existing config (user customizations preserved)"
+          else
+            echo "⚠️  jq not available - skipping smart merge, keeping existing config"
+          fi
         fi
 
   openclaw-gateway:
