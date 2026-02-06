@@ -134,6 +134,10 @@ services:
       - AGENTS_DEFAULTS_WORKSPACE=/home/node/.openclaw/workspace
       - XDG_CONFIG_HOME=/home/node/.openclaw
 
+      # A2A configuration
+      - OPENCLAW_A2A_ENABLED=true
+      - OPENCLAW_A2A_NETWORK=openclaw-net
+
     volumes:
       - openclaw-data:/home/node/.openclaw
 
@@ -157,3 +161,8 @@ services:
 
 volumes:
   openclaw-data:
+
+networks:
+  default:
+    name: openclaw-net
+    external: true
