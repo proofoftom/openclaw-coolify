@@ -166,7 +166,6 @@ services:
     depends_on:
       openclaw-init:
         condition: service_completed_successfully
-    network_mode: service:openclaw-gateway
 
     environment:
       - NODE_ENV=production
@@ -207,6 +206,11 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+    # IMPORTANT: This must come AFTER logging for Coolify to process it correctly
+    # Attach to openclaw-net so other instances can reach the discovery server
+    networks:
+      openclaw-net: {}
 
 volumes:
   openclaw-data:
