@@ -216,6 +216,9 @@ volumes:
   openclaw-data:
 
 networks:
+  openclaw-net:
+    name: openclaw-net
+    external: true
   default:
     name: openclaw-net
     external: true
