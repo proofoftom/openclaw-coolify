@@ -171,6 +171,7 @@ services:
       - NODE_ENV=production
       - HOME=/home/node
       - INSTANCE_NAME=${INSTANCE_NAME:-proofofclaw-default}
+      - A2A_SERVER_PATH=/home/node/.openclaw/workspace/skills/a2a-bridge/server.py
 
     volumes:
       - openclaw-data:/home/node/.openclaw
@@ -183,14 +184,26 @@ services:
       - "8765"
 
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8765/agent-card.json"]
+      test: ["CMD", "sh", "-c", "if [ -f $$A2A_SERVER_PATH ]; then wget --spider -q http://localhost:8765/agent-card.json; else exit 0; fi"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
 
-    # Run the A2A discovery server from the workspace
-    command: ["python3", "/home/node/.openclaw/workspace/skills/a2a-bridge/server.py"]
+    # Run the A2A discovery server from the workspace, or wait if not installed yet
+    command:
+      - sh
+      - -c
+      - |
+        if [ -f "$$A2A_SERVER_PATH" ]; then
+          echo "[A2A] Starting discovery server on port 8765..."
+          exec python3 "$$A2A_SERVER_PATH"
+        else
+          echo "[A2A] Server not found at $$A2A_SERVER_PATH - waiting for skill to be installed..."
+          echo "[A2A] Instance will be discoverable once the a2a-bridge skill is pulled from GitHub"
+          # Keep container running but idle
+          exec sleep infinity
+        fi
 
     logging:
       driver: "json-file"
