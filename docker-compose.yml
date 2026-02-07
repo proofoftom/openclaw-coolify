@@ -166,6 +166,7 @@ services:
     depends_on:
       openclaw-init:
         condition: service_completed_successfully
+    network_mode: service:openclaw-gateway
 
     environment:
       - NODE_ENV=production
