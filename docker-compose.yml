@@ -171,7 +171,7 @@ services:
       - NODE_ENV=production
       - HOME=/home/node
       - INSTANCE_NAME=${INSTANCE_NAME:-proofofclaw-default}
-      - A2A_SERVER_PATH=/home/node/.openclaw/workspace/skills/a2a-bridge/server.py
+      - A2A_SERVER_PATH=/home/node/.openclaw/workspace/skills/a2a-bridge/simple_server.py
 
     volumes:
       - openclaw-data:/home/node/.openclaw
